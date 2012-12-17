@@ -49,4 +49,37 @@
              (smallint :tz-offset)
              (refer-to :users false)
              (refer-to :protocols false))))
-  (down [] (drop (table :projects))))
+  (down [] (drop (table :experiments))))
+
+(defmigration add-projects-experiments-table
+  (up [] (create
+           (tbl :projects_experiments
+             (refer-to :experiments false)
+             (refer-to :projects false))))
+  (down [] (drop (table :projects_experiments))))
+
+(defmigration add-keywords-table
+  (up [] (create
+           (tbl :keywords
+             (char :tag)
+             (refer-to :users false))))
+  (down [] (drop (table :keywords)))
+  )
+
+(defmigration add-experiments-keywords-table
+  (up [] (create
+           (tbl :experiments_keywords
+             (refer-to :experiments false)
+             (refer-to :keywords false)
+             )))
+  (down [] (drop (table :experiments_keywords))))
+
+(defmigration add-projects-keywords-table
+  (up [] (create
+           (tbl :projects_keywords
+             (refer-to :projects false)
+             (refer-to :keywords false)
+             (refer-to :users false)
+             )))
+  (down [] (drop (table :projects_keywords))))
+

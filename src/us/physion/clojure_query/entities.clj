@@ -30,6 +30,11 @@
   (korma2/many-to-many projects :projects_keywords)
   (korma2/many-to-many experiments :experiments_keywords))
 
+(korma/defentity projects_keywords
+  (korma/has-one projects)
+  (korma/has-one keywords)
+  (korma/has-one users))
+
 ;
 ;
 ;(defentity properties
@@ -56,9 +61,7 @@
 (korma/defentity projects
   (korma/entity-fields :uuid)
   (korma/has-one users) ;; owner
-
   (korma2/many-to-many experiments :projects_experiments)
-
   (korma2/many-to-many keywords :projects_keywords))
 
 (korma/defentity experiments
@@ -70,6 +73,10 @@
   (korma/belongs-to protocols) ;;protocol
   (korma2/many-to-many projects :projects_experiments)
   (korma2/many-to-many keywords :experiments_keywords))
+
+(korma/defentity projects_experiments
+  (korma/has-one projects)
+  (korma/has-one experiments))
 
 ;
 ;(defentity epochs
