@@ -35,6 +35,11 @@
   (korma/has-one keywords)
   (korma/has-one users))
 
+(korma/defentity experiments_keywords
+  (korma/has-one experiments)
+  (korma/has-one keywords)
+  (korma/has-one users))
+
 ;
 ;
 ;(defentity properties

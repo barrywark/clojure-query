@@ -6,6 +6,7 @@
                  [org.clojars.maravillas/korma.incubator "0.1.1-SNAPSHOT"]
                  [com.h2database/h2 "1.3.168"]
                  [lobos "1.0.0-SNAPSHOT"]
+                 [criterium "0.3.1"]
                  ]
 
   :profiles {:dev

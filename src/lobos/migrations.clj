@@ -71,6 +71,7 @@
            (tbl :experiments_keywords
              (refer-to :experiments false)
              (refer-to :keywords false)
+             (refer-to :users false)
              )))
   (down [] (drop (table :experiments_keywords))))
 

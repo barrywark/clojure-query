@@ -4,7 +4,7 @@
 
 (def testdbspec {:classname   "org.h2.Driver"
                  :subprotocol "h2"
-                 :subname     "mem:test"
+                 :subname     "~/test"
                  :user        "testuser"
                  :password    "testpass"})
 
