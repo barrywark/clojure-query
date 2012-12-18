@@ -22,8 +22,8 @@
 (defmigration add-users-groups-table
   (up [] (create
            (tbl :users_groups
-           (refer-to :users false)
-           (refer-to :groups false)
+             (refer-to :users false)
+             (refer-to :groups false)
              )))
   (down [] (drop (table :users_groups))))
 
@@ -84,3 +84,51 @@
              )))
   (down [] (drop (table :projects_keywords))))
 
+(defmigration add-epochs-table
+  (up [] (create
+           (tbl :epochs
+             (uuid :uuid)
+             (timestamp :startdate)
+             (smallint :end-tz-offset)
+             (timestamp :enddate)
+             (smallint :end-tz-offset)
+             (refer-to :users false)
+             (refer-to :experiments false))))
+  (down [] (drop (table :epochs))))
+
+(defmigration add-epochs-keywords-table
+  (up [] (create
+           (tbl :epochs_keywords
+             (refer-to :epochs false)
+             (refer-to :keywords false)
+             (refer-to :users false)
+             )))
+  (down [] (drop (table :epochs_keywords))))
+
+(defmigration add-properties-table
+  (up [] (create
+           (tbl :properties
+             (char :key)
+             (smallint :type)
+             (double :double-value)
+             (bigint :int-value)
+             (clob :string-value)
+             (refer-to :users false))))
+  (down [] (drop (table :properties)))
+  )
+
+;(defmigration add-properties-index
+;  (up [] (create
+;           (index :properties :key)
+;           (index :properties :int-value)))
+;  (down [] (drop (index :properties :key)
+;             (index :properties :int-value))))
+
+(defmigration add-epochs-properties-table
+  (up [] (create
+           (tbl :epochs_properties
+             (refer-to :epochs false)
+             (refer-to :properties false)
+             (refer-to :users false)
+             )))
+  (down [] (drop (table :epochs_properties))))
