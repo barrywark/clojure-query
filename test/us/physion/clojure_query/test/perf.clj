@@ -1,7 +1,7 @@
 (ns us.physion.clojure-query.test.perf
   (:use [us.physion.clojure-query.entities])
   (:require [us.physion.clojure-query [db :as db] ])
-  (:require [korma.core :refer [insert values select join where fields sqlfn aggregate modifier]])
+  (:require [korma.core :refer [insert values select join where fields sqlfn aggregate modifier where* sqlfn* subselect]])
   (:require [korma.incubator.core :refer [with]])
   (:require [lobos core migrations config])
   (:require [criterium.core :refer [bench with-progress-reporting]]))
@@ -28,7 +28,7 @@
 
 (defn build-epochs [n experiment-id owner-id]
   (dotimes [i n]
-    (let [epoch-id (-> (insert epochs (values {:uuid (random-uuid )
+    (let [epoch-id (-> (insert epochs (values {:uuid (random-uuid)
                                                :users_id owner-id
                                                :experiments_id experiment-id })) vals first)]
       (add-epoch-keywords epoch-id owner-id)
@@ -74,7 +74,8 @@
 
 
 
-
+(defn exists [query form]
+  (sqlfn* query "exists" form))
 
 (defn experiments-query []
   (select projects
@@ -100,31 +101,72 @@
 
     (aggregate (count :*) :exp-count)
     )
+  )
 
+(defn epochs-query []
   (select epochs
     (modifier "DISTINCT")
 
+    ;    (fields :epochs.uuid)
+
     (join :inner experiments (= :experiments_id :experiments.id))
 
+    ;;projects
     (join :inner projects_experiments (= :projects_experiments.experiments_id :experiments.id))
     (join :inner projects (= :projects.id :projects_experiments.id))
 
+    ;;project keywords
     (join :inner projects_keywords (= :projects_keywords.projects_id :projects.id))
-    (join :inner keywords (= :projects_keywords.keywords_id :keywords.id))
+    (join :inner [keywords :project-keywords] (= :projects_keywords.keywords_id :project-keywords.id))
+    (where (like :project-keywords.tag "project-tag-1"))
 
-    (where (like :keywords.tag "project-tag-1"))
 
+    ;;epoch keywords
+    (where* (or (sqlfn* "exists" (subselect epochs_keywords
+                                   (join :inner [keywords :keywords] (= :epochs_keywords.keywords_id :keywords.id))
+                                   (where (and
+                                            (= :epochs_keywords.epochs_id :epochs.id)
+                                            (like :keywords.tag "epoch-tag-1")
+                                            )
+                                     )))
+              (sqlfn* "exists" (subselect epochs_keywords
+                                 (join :inner [keywords :keywords] (= :epochs_keywords.keywords_id :keywords.id))
+                                 (where (and
+                                          (= :epochs_keywords.epochs_id :epochs.id)
+                                          (like :keywords.tag "epoch-tag-x")
+                                          )
+                                   )))))
+
+    ;; properties
     (join :inner epochs_properties (= :epochs.id :epochs_properties.epochs_id))
-    (join :inner properties (= :epochs_properties.properties_id :properties.id))
+    (join :inner [properties :epoch-properties] (= :epochs_properties.properties_id :epoch-properties.id))
 
-    (where (or (and (like :properties.key "epoch-prop-10")
-                 (= :properties.int-value 10))
-             (and (like :properties.key "epoch-prop-1")
-               (= :properties.int-value 5))))
+
+    (where* (sqlfn* "exists" (subselect epochs_properties
+                               (join :inner [properties :props] (= :epochs_properties.properties_id :props.id))
+                               (where (and
+                                        (= :epochs_properties.epochs_id :epochs.id)
+                                        (like :props.key "epoch-prop-1")
+                                        (= :props.int-value 1)
+                                        )
+                                 ))))
+
+    (where* (sqlfn* "exists" (subselect epochs_properties
+                               (join :inner [properties :props] (= :epochs_properties.properties_id :props.id))
+                               (where (and
+                                        (= :epochs_properties.epochs_id :epochs.id)
+                                        (like :props.key "epoch-prop-2")
+                                        (= :props.int-value 2)
+                                        )
+                                 ))))
 
     (aggregate (count :*) :epoch-count)
     )
   )
 
+;;(select epochs (where* (sqlfn* "exists" (subselect epochs))))
+
 (defn bench-query []
-  (bench (experiments-query)))
+  (bench (do
+           (experiments-query)
+           (epochs-query))))
