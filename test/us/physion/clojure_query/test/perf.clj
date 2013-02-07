@@ -116,9 +116,13 @@
     (join :inner projects (= :projects.id :projects_experiments.id))
 
     ;;project keywords
-    (join :inner projects_keywords (= :projects_keywords.projects_id :projects.id))
-    (join :inner [keywords :project-keywords] (= :projects_keywords.keywords_id :project-keywords.id))
-    (where (like :project-keywords.tag "project-tag-1"))
+    (where* (or (sqlfn* "exists" (subselect projects_keywords
+                                   (join :inner [keywords :keywords] (= :projects_keywords.keywords_id :keywords.id))
+                                   (where (and
+                                            (= :projects_keywords.projects_id :projects.id)
+                                            (like :keywords.tag "project-tag-1")
+                                            )
+                                     )))))
 
 
     ;;epoch keywords
@@ -160,6 +164,15 @@
                                         )
                                  ))))
 
+    (where* (sqlfn* "exists" (subselect epochs_properties
+                               (join :inner [properties :props] (= :epochs_properties.properties_id :props.id))
+                               (where (and
+                                        (= :epochs_properties.epochs_id :epochs.id)
+                                        (like :props.key "epoch-prop-3")
+                                        (= :props.int-value 3)
+                                        )
+                                 ))))
+
     (aggregate (count :*) :epoch-count)
     )
   )
@@ -167,6 +180,7 @@
 ;;(select epochs (where* (sqlfn* "exists" (subselect epochs))))
 
 (defn bench-query []
-  (bench (do
-           (experiments-query)
-           (epochs-query))))
+	(with-progress-reporting 
+		(bench (do
+			(experiments-query)
+			(epochs-query)))))
